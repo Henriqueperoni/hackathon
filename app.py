@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, time
 from flask import (Flask, flash, render_template, redirect, request, session,
                    url_for)
 from flask_pymongo import PyMongo
@@ -43,7 +44,17 @@ def login():
             # Ensure hashed password matches user input
             if check_password_hash(existing_user["password"],
                                    request.form.get("password")):
-                session["user"] = request.form.get("username").lower()
+                username = request.form.get("username")
+                session["user"] = username.lower()
+                # Get time and display welcoming flash message depending on time
+                now = datetime.now()
+                current_time = now.time()
+                if current_time > time(00,00) and current_time <= time(12,00):
+                        flash(f"Good Morning, {username}")
+                elif current_time > time(12,00) and current_time <= time(18,00):
+                    flash(f"Good Afternoon, {username}")
+                else:
+                    flash(f"Good Night, {username}")
                 return redirect(url_for('set_noffles'))
             else:
                 # Invalid password match
@@ -354,7 +365,7 @@ def set_noffles(name=None):
         user = mongo.db.users.find()
         flash("You need to be logged in to access this page", 'error')
         return redirect(url_for("login"))
-
+    
     user_noffles = user['noffles']
     noffles = mongo.db.noffles.find()
 
@@ -484,4 +495,4 @@ def delete_account(username):
 if __name__ == "__main__":
     app.run(host=os.environ.get("IP"),
             port=int(os.environ.get("PORT")),
-            debug=False)
+            debug=True)
